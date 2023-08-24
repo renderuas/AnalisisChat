@@ -3,10 +3,9 @@ import re
 from collections import defaultdict
 from datetime import datetime
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from io import BytesIO
-import base64
+import pandas as pd
 import sys
+from matplotlib.backends.backend_pdf import PdfPages
 
 
 def analyze_chat(file_path):
@@ -45,7 +44,7 @@ def analyze_chat(file_path):
 
     return messages_per_participant, active_hours_per_participant, monthly_activity_per_participant_and_year
 
-def create_report(file_path, output_pdf, output_html):
+def create_report(file_path, output_pdf):
     messages_per_participant, active_hours_per_participant, monthly_activity_per_participant_and_year = analyze_chat(file_path)
 
     # Create a PDF writer
@@ -59,9 +58,9 @@ def create_report(file_path, output_pdf, output_html):
     names, message_counts = zip(*sorted(messages_per_participant.items(), key=lambda x: x[1], reverse=True))
     plt.bar(names, message_counts)
     plt.xticks(rotation=90)
-    plt.xlabel('Borrachuzo')
+    plt.xlabel('Participante')
     plt.ylabel('Numero total de mensajes')
-    plt.title('Mensajes por borrachuzo')
+    plt.title('Mensajes por participante')
     save_plot_to_pdf()
     plt.close()
 
@@ -73,7 +72,7 @@ def create_report(file_path, output_pdf, output_html):
         plt.plot(list(range(24)), activity_per_hour, label=participant, color=colors[idx % 20])
     plt.xlabel('Hora del dia')
     plt.ylabel('Numero de mensajes')
-    plt.title('Comparacion de horas activas en todos los borrachuzos')
+    plt.title('Comparacion de horas activas en todos los participantes')
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     save_plot_to_pdf()
     plt.close()
@@ -95,41 +94,8 @@ def create_report(file_path, output_pdf, output_html):
     # Close the PDF writer
     pdf_writer.close()
 
-    # Create HTML report
-    
-def encode_plot_to_base64(fig):
-    canvas = FigureCanvas(fig)
-    buf = BytesIO()
-    canvas.print_png(buf)
-    image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
-    buf.close()
-    return image_base64
-
-def create_html_report(file_path):
-    messages_per_participant, active_hours_per_participant, monthly_activity_per_participant_and_year = analyze_chat(file_path)
-    html_content = '<h1>Informe de Análisis de Chat</h1>'
-
-    # Gráfico de Mensajes por Participante
-    fig, ax = plt.subplots(figsize=(8, 4))
-    names, message_counts = zip(*sorted(messages_per_participant.items(), key=lambda x: x[1], reverse=True))
-    ax.bar(names, message_counts)
-    plt.xticks(rotation=90)
-    plt.xlabel('Participantes')
-    plt.ylabel('Número de Mensajes')
-    plt.title('Mensajes por Participante')
-    html_content += f'<h2>Mensajes por Participante</h2><img src="data:image/png;base64,{encode_plot_to_base64(fig)}" alt="Mensajes por Participante">'
-    plt.close(fig)
-
-    # Gráficos adicionales van aquí...
-
-    # Guardar en archivo HTML
-    html_path = "report.html"
-    with open(html_path, 'w') as html_file:
-        html_file.write(html_content)
-
-    return html_path
-
 if __name__ == "__main__":
     file_path = sys.argv[1]
-    html_report_path = create_html_report(file_path)
-    print(f"Informe HTML generado en {html_report_path}")
+    output_pdf = sys.argv[2]
+    create_report(file_path, output_pdf)
+
