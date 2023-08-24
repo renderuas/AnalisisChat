@@ -108,4 +108,4 @@ if __name__ == "__main__":
     file_path = sys.argv[1]
     output_pdf = sys.argv[2]
     output_html = sys.argv[3]
-    create_report(file_path, output_pdf, output_html) 
+    create_report(file_path, output_pdf, output_html)
