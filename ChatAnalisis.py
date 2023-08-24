@@ -72,7 +72,7 @@ def create_report(file_path, output_pdf):
     save_plot_to_pdf()
     plt.close()
 
-    @#Comparacion de rtiempo
+    #Comparacion de rtiempo
     all_years = sorted(set(year for participant in monthly_activity_per_participant_and_year.values() for year in participant.keys()))
     months_with_years = [f"{month} {year}" for year in all_years for month in ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]]
     for idx, (participant, _) in enumerate(sorted_participants):
