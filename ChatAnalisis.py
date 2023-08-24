@@ -3,9 +3,10 @@ import re
 from collections import defaultdict
 from datetime import datetime
 import matplotlib.pyplot as plt
-import pandas as pd
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from io import BytesIO
+import base64
 import sys
-from matplotlib.backends.backend_pdf import PdfPages
 
 
 def analyze_chat(file_path):
@@ -95,17 +96,40 @@ def create_report(file_path, output_pdf, output_html):
     pdf_writer.close()
 
     # Create HTML report
-    with open(output_html, 'w') as html_file:
-        html_file.write("<h1>Chat Analysis Report</h1>")
-        html_file.write("<h2>Messages per Participant</h2>")
-        html_file.write(f'<img src="{output_pdf}_1.png" alt="Messages per Participant">')
-        html_file.write("<h2>Comparison of Active Hours</h2>")
-        html_file.write(f'<img src="{output_pdf}_2.png" alt="Comparison of Active Hours">')
-        html_file.write("<h2>Comparison of Monthly Activity</h2>")
-        html_file.write(f'<img src="{output_pdf}_3.png" alt="Comparison of Monthly Activity">')
+    
+def encode_plot_to_base64(fig):
+    canvas = FigureCanvas(fig)
+    buf = BytesIO()
+    canvas.print_png(buf)
+    image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+    buf.close()
+    return image_base64
+
+def create_html_report(file_path):
+    messages_per_participant, active_hours_per_participant, monthly_activity_per_participant_and_year = analyze_chat(file_path)
+    html_content = '<h1>Informe de Análisis de Chat</h1>'
+
+    # Gráfico de Mensajes por Participante
+    fig, ax = plt.subplots(figsize=(8, 4))
+    names, message_counts = zip(*sorted(messages_per_participant.items(), key=lambda x: x[1], reverse=True))
+    ax.bar(names, message_counts)
+    plt.xticks(rotation=90)
+    plt.xlabel('Participantes')
+    plt.ylabel('Número de Mensajes')
+    plt.title('Mensajes por Participante')
+    html_content += f'<h2>Mensajes por Participante</h2><img src="data:image/png;base64,{encode_plot_to_base64(fig)}" alt="Mensajes por Participante">'
+    plt.close(fig)
+
+    # Gráficos adicionales van aquí...
+
+    # Guardar en archivo HTML
+    html_path = "report.html"
+    with open(html_path, 'w') as html_file:
+        html_file.write(html_content)
+
+    return html_path
 
 if __name__ == "__main__":
     file_path = sys.argv[1]
-    output_pdf = sys.argv[2]
-    output_html = sys.argv[3]
-    create_report(file_path, output_pdf, output_html)
+    html_report_path = create_html_report(file_path)
+    print(f"Informe HTML generado en {html_report_path}")
