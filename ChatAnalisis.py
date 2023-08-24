@@ -1,4 +1,4 @@
-# python script.py /ruta/al/archivo/Chat.txt report.pdf report.html
+# python script.py Chat.txt report.pdf
 import re
 from collections import defaultdict
 from datetime import datetime
@@ -9,7 +9,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 
 def analyze_chat(file_path):
-    # Initializing variables
+    # variables
     participants = set()
     messages_per_participant = defaultdict(int)
     active_hours_per_participant = defaultdict(lambda: defaultdict(int))
@@ -17,7 +17,7 @@ def analyze_chat(file_path):
     total_messages = 0
     days_activity = defaultdict(int)
 
-    # Reading the file and analyzing the content
+    # Lectira
     with open(file_path, 'r', encoding='utf-8') as file:
         for line in file:
             match = re.match(r'(\d+/\d+/\d+), (\d+:\d+) - (.*?):', line)
@@ -25,21 +25,16 @@ def analyze_chat(file_path):
                 date_str, time_str, participant = match.groups()
                 date_obj = datetime.strptime(date_str + " " + time_str, '%d/%m/%y %H:%M')
 
-
-                # Adding participant
+                #Calculos
                 participants.add(participant)
 
-                # Incrementing message count
                 messages_per_participant[participant] += 1
                 total_messages += 1
 
-                # Incrementing hour activity
                 active_hours_per_participant[participant][date_obj.hour] += 1
 
-                # Incrementing monthly and yearly activity
                 monthly_activity_per_participant_and_year[participant][date_obj.year][date_obj.month - 1] += 1
-
-                # Incrementing day activity
+                
                 days_activity[date_str] += 1
 
     return messages_per_participant, active_hours_per_participant, monthly_activity_per_participant_and_year
@@ -47,14 +42,14 @@ def analyze_chat(file_path):
 def create_report(file_path, output_pdf):
     messages_per_participant, active_hours_per_participant, monthly_activity_per_participant_and_year = analyze_chat(file_path)
 
-    # Create a PDF writer
+    # Cremos el writer de pdf
     pdf_writer = PdfPages(output_pdf)
 
-    # Function to save plot to PDF
+    # funcion para salvar a pdf
     def save_plot_to_pdf():
         pdf_writer.savefig(bbox_inches='tight')
 
-    # Plot messages per participant
+    # Mensajes por paritip
     names, message_counts = zip(*sorted(messages_per_participant.items(), key=lambda x: x[1], reverse=True))
     plt.bar(names, message_counts)
     plt.xticks(rotation=90)
@@ -64,7 +59,7 @@ def create_report(file_path, output_pdf):
     save_plot_to_pdf()
     plt.close()
 
-    # Plot comparison of active hours for all participants
+    # Comparacion por horas
     sorted_participants = sorted(messages_per_participant.items(), key=lambda x: x[1], reverse=True)
     colors = plt.cm.tab20.colors
     for idx, (participant, _) in enumerate(sorted_participants):
@@ -77,7 +72,7 @@ def create_report(file_path, output_pdf):
     save_plot_to_pdf()
     plt.close()
 
-    # Plot comparison of monthly activity for all participants for all years
+    @#Comparacion de rtiempo
     all_years = sorted(set(year for participant in monthly_activity_per_participant_and_year.values() for year in participant.keys()))
     months_with_years = [f"{month} {year}" for year in all_years for month in ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]]
     for idx, (participant, _) in enumerate(sorted_participants):
@@ -91,7 +86,7 @@ def create_report(file_path, output_pdf):
     save_plot_to_pdf()
     plt.close()
 
-    # Close the PDF writer
+    # Cerramos pdf
     pdf_writer.close()
 
 if __name__ == "__main__":
